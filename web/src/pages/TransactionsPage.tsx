@@ -67,7 +67,9 @@ export function TransactionsPage() {
       t.note ?? '',
       memberName(household, t.user_id) ?? '',
     ])
-    const csv = [header, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(',')).join('\r\n')
+    // Cegah CSV/formula injection: sel berawalan = + - @ (atau tab/CR) dibuka Excel sebagai rumus.
+    const cell = (c: string) => `"${(/^[=+\-@\t\r]/.test(c) ? `'${c}` : c).replace(/"/g, '""')}"`
+    const csv = [header, ...rows].map((r) => r.map(cell).join(',')).join('\r\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)

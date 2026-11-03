@@ -19,6 +19,7 @@ Finance_Tracking/
    1. `20261103000000_init.sql`: skema dasar
    2. `20261103010000_household.sql`: data bersama per rumah tangga
    3. `20261103020000_sso_allowlist.sql`: hanya email yang diundang yang bisa masuk
+   4. `20261103030000_security_hardening.sql`: akun hanya lewat Google, pencatat tidak bisa dipalsukan, akses anon ditutup
 
    Kalau pakai Supabase CLI: `supabase link` lalu `supabase db push`.
 3. **Login Google (SSO):**

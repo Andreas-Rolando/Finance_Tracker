@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { WalletIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/lib/supabase'
@@ -62,9 +63,12 @@ export function LoginPage() {
   return (
     <AuthShell>
       <Card>
-        <CardHeader className="text-center">
-          <CardTitle>Masuk</CardTitle>
-          <CardDescription>Keuangan rumah tangga — khusus anggota yang diundang.</CardDescription>
+        <CardHeader className="justify-items-center gap-2 text-center">
+          <WalletIcon className="mb-1 size-8 text-primary" strokeWidth={1.75} aria-hidden />
+          <CardTitle className="text-lg font-semibold">Selamat Datang Kembali!</CardTitle>
+          <CardDescription className="text-balance">
+            Kelola keuanganmu dengan lebih mudah, pantau setiap transaksi, dan capai tujuan finansialmu.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <Button size="lg" variant="outline" className="h-10 w-full gap-2.5" onClick={signInWithGoogle} disabled={busy}>
