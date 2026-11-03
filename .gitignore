@@ -1,0 +1,21 @@
+# Dependencies & build
+node_modules/
+dist/
+.vercel/
+
+# Env & secrets — jangan pernah di-commit
+.env
+.env.*
+!.env.example
+
+# Data keuangan pribadi
+*.xlsx
+*.xls
+*.csv
+finance-backup-*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.log

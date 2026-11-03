@@ -1,0 +1,10 @@
+{
+  "name": "finance-tracking",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "test": "npm --prefix web test",
+    "lint": "npm --prefix web run lint"
+  }
+}
