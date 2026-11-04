@@ -6,6 +6,8 @@ import type {
   Household,
   HouseholdMember,
   HouseholdInvite,
+  TelegramAccount,
+  TelegramGroup,
   BudgetItem,
   Debt,
   DebtPaid,
@@ -32,6 +34,7 @@ export const qk = {
   annualGoals: (year: number) => ['annual_goals', year] as const,
   profile: ['profile'] as const,
   household: ['household'] as const,
+  telegram: ['telegram'] as const,
 }
 
 const num = (v: unknown) => (v == null ? 0 : Number(v))
@@ -173,7 +176,7 @@ function invalidatePlans(qc: QueryClient) {
 
 // ------------------------------------------------------------------ transactions
 
-export type TransactionInput = Omit<Transaction, 'id' | 'created_at' | 'user_id'>
+export type TransactionInput = Omit<Transaction, 'id' | 'created_at' | 'user_id' | 'source'>
 
 export function useSaveTransaction() {
   const qc = useQueryClient()
@@ -498,10 +501,11 @@ export function useHousehold() {
   return useQuery({
     queryKey: qk.household,
     queryFn: async (): Promise<Household | null> => {
-      const h = unwrap(await supabase.from('households').select('id, name').maybeSingle()) as
-        | { id: string; name: string }
-        | null
-      if (!h) return null
+      const raw = unwrap(
+        await supabase.from('households').select('id, name, notify_threshold, reminders_enabled').maybeSingle(),
+      ) as { id: string; name: string; notify_threshold: number; reminders_enabled: boolean } | null
+      if (!raw) return null
+      const h = { ...raw, notify_threshold: num(raw.notify_threshold) }
       const members = unwrap(
         await supabase
           .from('household_members')
@@ -545,9 +549,70 @@ export function useHouseholdMutations() {
       },
       onSuccess,
     }),
+    updateSettings: useMutation({
+      mutationFn: async ({
+        id,
+        ...changes
+      }: {
+        id: string
+        notify_threshold?: number
+        reminders_enabled?: boolean
+      }) => {
+        unwrap(await supabase.from('households').update(changes).eq('id', id).select('id'))
+      },
+      onSuccess,
+    }),
     rename: useMutation({
       mutationFn: async ({ id, name }: { id: string; name: string }) => {
         unwrap(await supabase.from('households').update({ name }).eq('id', id).select('id'))
+      },
+      onSuccess,
+    }),
+  }
+}
+
+// ------------------------------------------------------------------ telegram
+
+export function useTelegram(opts: { poll?: boolean } = {}) {
+  return useQuery({
+    queryKey: qk.telegram,
+    refetchInterval: opts.poll ? 3000 : false,
+    queryFn: async () => {
+      const [accounts, group] = await Promise.all([
+        supabase.from('telegram_accounts').select('user_id, username, first_name, linked_at'),
+        supabase.from('telegram_groups').select('chat_id, title, linked_at').maybeSingle(),
+      ])
+      return {
+        accounts: unwrap(accounts) as TelegramAccount[],
+        group: unwrap(group) as TelegramGroup | null,
+      }
+    },
+  })
+}
+
+export function useTelegramMutations() {
+  const qc = useQueryClient()
+  const onSuccess = () => qc.invalidateQueries({ queryKey: qk.telegram })
+  return {
+    createCode: useMutation({
+      mutationFn: async (kind: 'account' | 'group') => {
+        const rows = unwrap(await supabase.rpc('create_telegram_link_code', { p_kind: kind })) as {
+          code: string
+          expires_at: string
+        }[]
+        if (!rows?.[0]) throw new Error('Gagal membuat kode')
+        return rows[0]
+      },
+    }),
+    unlinkAccount: useMutation({
+      mutationFn: async (userId: string) => {
+        unwrap(await supabase.from('telegram_accounts').delete().eq('user_id', userId).select('user_id'))
+      },
+      onSuccess,
+    }),
+    unlinkGroup: useMutation({
+      mutationFn: async (chatId: number) => {
+        unwrap(await supabase.from('telegram_groups').delete().eq('chat_id', chatId).select('chat_id'))
       },
       onSuccess,
     }),

@@ -7,7 +7,9 @@ Web app pencatatan keuangan rumah tangga, berdasarkan konsep template spreadshee
 ```
 Finance_Tracking/
 ├── PRD.md
+├── docs/                  ← plan & panduan setup Telegram bot
 ├── supabase/migrations/   ← skema database + RLS + views
+├── supabase/functions/    ← Edge Functions (Telegram webhook & cron)
 └── web/                   ← frontend React
 ```
 
@@ -20,6 +22,7 @@ Finance_Tracking/
    2. `20261103010000_household.sql`: data bersama per rumah tangga
    3. `20261103020000_sso_allowlist.sql`: hanya email yang diundang yang bisa masuk
    4. `20261103030000_security_hardening.sql`: akun hanya lewat Google, pencatat tidak bisa dipalsukan, akses anon ditutup
+   5. `20261104000000_telegram.sql` & 6. `20261104010000_telegram_cron.sql`: Telegram bot (lihat [docs/telegram-setup.md](docs/telegram-setup.md))
 
    Kalau pakai Supabase CLI: `supabase link` lalu `supabase db push`.
 3. **Login Google (SSO):**
@@ -59,6 +62,7 @@ Nilai `URL` dan `anon key` ada di Supabase Dashboard → Project Settings → AP
 | `npm run build` | Type-check + build produksi ke `web/dist` |
 | `npm test` | Unit test rumus keuangan (paritas dengan Excel, hutang, tabungan, kalender) |
 | `npm run lint` | Lint dengan oxlint |
+| `npx deno test --allow-env --allow-read --config supabase/functions/deno.json supabase/functions/` | Test integrasi bot Telegram (dari root repo) |
 
 ## Fitur
 

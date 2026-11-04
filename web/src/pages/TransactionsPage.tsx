@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { DownloadIcon, PlusIcon, ReceiptIcon, SearchIcon } from 'lucide-react'
+import { DownloadIcon, PlusIcon, ReceiptIcon, SearchIcon, SendIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -169,7 +169,12 @@ export function TransactionsPage() {
                       >
                         <CategoryDot category={t.category} />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-medium">{nameOf(t)}</span>
+                          <span className="flex items-center gap-1.5 truncate text-sm font-medium">
+                            {nameOf(t)}
+                            {t.source === 'telegram' && (
+                              <SendIcon className="size-3 shrink-0 text-muted-foreground" aria-label="dicatat via Telegram" />
+                            )}
+                          </span>
                           <span className="block truncate text-xs text-muted-foreground">
                             {CATEGORY_MAP[t.category].short}
                             {t.note ? ` · ${t.note}` : ''}

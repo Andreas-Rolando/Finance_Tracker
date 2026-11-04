@@ -1,0 +1,9 @@
+# Konfigurasi minimal Supabase CLI untuk deploy Edge Function.
+project_id = "finance-tracking"
+
+# Telegram & pg_cron tidak mengirim JWT Supabase → keamanan pakai secret header.
+[functions.telegram-webhook]
+verify_jwt = false
+
+[functions.telegram-cron]
+verify_jwt = false

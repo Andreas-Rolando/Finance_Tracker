@@ -27,6 +27,8 @@ export interface Transaction {
   debt_id: string | null
   savings_goal_id: string | null
   note: string | null
+  /** asal pencatatan */
+  source?: 'app' | 'telegram'
   created_at: string
 }
 
@@ -107,6 +109,21 @@ export interface HouseholdInvite {
 export interface Household {
   id: string
   name: string
+  notify_threshold: number
+  reminders_enabled: boolean
   members: HouseholdMember[]
   invites: HouseholdInvite[]
+}
+
+export interface TelegramAccount {
+  user_id: string
+  username: string | null
+  first_name: string | null
+  linked_at: string
+}
+
+export interface TelegramGroup {
+  chat_id: number
+  title: string | null
+  linked_at: string
 }

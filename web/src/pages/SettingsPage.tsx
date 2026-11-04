@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/app/bits'
 import { Field } from '@/components/app/fields'
+import { TelegramCard } from '@/components/app/TelegramCard'
 import { exportAllData, useHousehold, useHouseholdMutations, useProfile, useUpdateProfile } from '@/hooks/api'
 import { todayISO } from '@/lib/dates'
 import { supabase } from '@/lib/supabase'
@@ -73,6 +74,8 @@ export function SettingsPage() {
         </Card>
 
         <HouseholdCard currentUserId={userId} />
+
+        <TelegramCard currentUserId={userId} />
 
         <Card>
           <CardHeader>

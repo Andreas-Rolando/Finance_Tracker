@@ -19,3 +19,11 @@ finance-backup-*.json
 Thumbs.db
 .idea/
 *.log
+
+# Supabase CLI (lokal)
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+
+# Hasil generate (node scripts/bundle-functions.mjs)
+supabase/functions-bundled/
