@@ -59,6 +59,53 @@ export async function memberChats(householdId: string): Promise<number[]> {
   return (data ?? []).map((r) => Number(r.chat_id))
 }
 
+/** Tujuan notifikasi rumah tangga: grup keluarga kalau ada, kalau tidak chat pribadi tiap anggota. */
+export async function targetChats(householdId: string): Promise<number[]> {
+  const group = await householdGroupChat(householdId)
+  return group ? [group] : await memberChats(householdId)
+}
+
+/** Transaksi pada rentang tanggal (inklusif). */
+export async function loadTxRange(householdId: string, from: string, to: string): Promise<TxRow[]> {
+  const { data, error } = await db
+    .from('transactions')
+    .select('id, date, amount, category, budget_item_id, debt_id, savings_goal_id, note, user_id')
+    .eq('household_id', householdId)
+    .gte('date', from)
+    .lte('date', to)
+    .order('date')
+    .limit(5000)
+  if (error) throw error
+  return (data ?? []).map((t) => ({ ...t, amount: num(t.amount) })) as TxRow[]
+}
+
+const RATE_LIMIT_PER_MINUTE = 20
+
+/**
+ * Tandai update Telegram sudah diproses. `false` = duplikat (Telegram mengirim ulang)
+ * → jangan diproses lagi supaya transaksi tidak tercatat dua kali.
+ */
+export async function claimUpdate(updateId: number, telegramUserId: number | null): Promise<boolean> {
+  const { error } = await db.from('telegram_updates').insert({ update_id: updateId, telegram_user_id: telegramUserId })
+  if (!error) return true
+  if (error.code === '23505') return false
+  console.error('claimUpdate gagal, tetap diproses', error.message)
+  return true
+}
+
+/** Jumlah update dari user ini dalam 60 detik terakhir (termasuk yang barusan). */
+export async function recentUpdateCount(telegramUserId: number): Promise<number> {
+  const since = new Date(Date.now() - 60_000).toISOString()
+  const { data } = await db
+    .from('telegram_updates')
+    .select('update_id')
+    .eq('telegram_user_id', telegramUserId)
+    .gte('received_at', since)
+    .limit(RATE_LIMIT_PER_MINUTE + 5)
+  return data?.length ?? 0
+}
+export { RATE_LIMIT_PER_MINUTE }
+
 /** Item budget yang masih/pernah berlaku sejak `since`. */
 export async function loadItems(householdId: string, since: string): Promise<BudgetItemRow[]> {
   const { data, error } = await db
@@ -165,4 +212,5 @@ export async function cleanup() {
   const now = new Date().toISOString()
   await db.from('telegram_link_codes').delete().lt('expires_at', now)
   await db.from('telegram_pending').delete().lt('created_at', addDays(now.slice(0, 10), -1))
+  await db.from('telegram_updates').delete().lt('received_at', addDays(now.slice(0, 10), -2))
 }

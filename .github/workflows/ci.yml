@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web (lint · build · test + DB)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      # Termasuk test parser bot & test keamanan database (PGlite, semua migrasi)
+      - run: npm test
+
+  bot:
+    name: Bot Telegram (Deno check · lint · test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check --config supabase/functions/deno.json supabase/functions/telegram-webhook/index.ts supabase/functions/telegram-cron/index.ts
+      - run: deno lint --config supabase/functions/deno.json supabase/functions/
+      - run: deno test --allow-env --allow-read --config supabase/functions/deno.json supabase/functions/
+      - name: Bundle untuk deploy via dashboard
+        run: node scripts/bundle-functions.mjs

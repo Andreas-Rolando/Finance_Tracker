@@ -111,6 +111,8 @@ export interface Household {
   name: string
   notify_threshold: number
   reminders_enabled: boolean
+  budget_alerts_enabled: boolean
+  summaries_enabled: boolean
   members: HouseholdMember[]
   invites: HouseholdInvite[]
 }

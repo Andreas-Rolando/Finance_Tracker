@@ -139,3 +139,30 @@ npx supabase functions deploy telegram-webhook
 npx supabase functions deploy telegram-cron
 ```
 Pengaturan `verify_jwt = false` sudah ada di `supabase/config.toml`.
+
+---
+
+## Update: peringatan budget, ringkasan otomatis, realtime (5 Nov 2026)
+
+Kalau langkah 1–9 sudah pernah dijalankan, cukup lakukan ini:
+
+1. **SQL Editor**, jalankan berurutan:
+   1. `supabase/migrations/20261105000000_alerts_dedupe.sql`
+   2. `supabase/migrations/20261105010000_summaries_realtime.sql`
+2. **Deploy ulang kedua fungsi.** Generate dulu dengan `node scripts/bundle-functions.mjs`, lalu tempel isi `supabase/functions-bundled/telegram-webhook.ts` dan `telegram-cron.ts` ke tab **Code** masing-masing, dan klik **Deploy**. Pastikan **Verify JWT with legacy secret** tetap mati.
+3. **Push ke GitHub / redeploy web** setelah langkah 1. Web versi baru membaca kolom dari migrasi 7.
+
+Fitur baru:
+- ⚠️ **Peringatan budget:** Rumah Tangga / Tagihan mencapai 80% atau 100% rencana bulan ini. Setiap level hanya dikirim sekali per bulan.
+- 📅 **Ringkasan mingguan** setiap Minggu jam 20.00 WIB, dan 🗓️ **laporan bulan lalu** setiap tanggal 1 jam 08.00 WIB.
+- 🔄 **Realtime di web:** transaksi dari pasangan atau Telegram langsung muncul tanpa refresh, disertai notifikasi kecil.
+- 🛡️ **Anti-dobel:** update Telegram yang dikirim ulang tidak tercatat dua kali. Ada juga batas 20 pesan per menit per orang.
+
+Semua notifikasi bisa dinyalakan atau dimatikan di **Pengaturan → Telegram → Notifikasi**.
+
+Untuk mencoba ringkasan tanpa menunggu jadwal, jalankan di SQL Editor:
+```sql
+select public.call_telegram_cron('weekly');
+select public.call_telegram_cron('monthly');
+```
+

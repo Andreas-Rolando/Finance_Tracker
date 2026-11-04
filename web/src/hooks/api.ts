@@ -502,8 +502,8 @@ export function useHousehold() {
     queryKey: qk.household,
     queryFn: async (): Promise<Household | null> => {
       const raw = unwrap(
-        await supabase.from('households').select('id, name, notify_threshold, reminders_enabled').maybeSingle(),
-      ) as { id: string; name: string; notify_threshold: number; reminders_enabled: boolean } | null
+        await supabase.from('households').select('id, name, notify_threshold, reminders_enabled, budget_alerts_enabled, summaries_enabled').maybeSingle(),
+      ) as Omit<Household, 'members' | 'invites'> | null
       if (!raw) return null
       const h = { ...raw, notify_threshold: num(raw.notify_threshold) }
       const members = unwrap(
@@ -557,6 +557,8 @@ export function useHouseholdMutations() {
         id: string
         notify_threshold?: number
         reminders_enabled?: boolean
+        budget_alerts_enabled?: boolean
+        summaries_enabled?: boolean
       }) => {
         unwrap(await supabase.from('households').update(changes).eq('id', id).select('id'))
       },

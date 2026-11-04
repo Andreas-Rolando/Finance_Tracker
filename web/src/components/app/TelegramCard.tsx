@@ -175,50 +175,89 @@ export function TelegramCard({ currentUserId }: { currentUserId: string | undefi
           </div>
         )}
 
-        {household && <NotifySettings householdId={household.id} threshold={household.notify_threshold} reminders={household.reminders_enabled} hasGroup={Boolean(group)} />}
+        {household && (
+          <NotifySettings
+            householdId={household.id}
+            threshold={household.notify_threshold}
+            toggles={{
+              reminders_enabled: household.reminders_enabled,
+              budget_alerts_enabled: household.budget_alerts_enabled,
+              summaries_enabled: household.summaries_enabled,
+            }}
+            hasGroup={Boolean(group)}
+          />
+        )}
       </CardContent>
     </Card>
   )
 }
 
+type ToggleKey = 'reminders_enabled' | 'budget_alerts_enabled' | 'summaries_enabled'
+
+const TOGGLES: { key: ToggleKey; title: string; hint: string; on: string; off: string }[] = [
+  {
+    key: 'reminders_enabled',
+    title: 'Pengingat jatuh tempo',
+    hint: 'Setiap hari jam 07.00 WIB: tagihan yang telat, hari ini, dan besok.',
+    on: 'Pengingat aktif',
+    off: 'Pengingat dimatikan',
+  },
+  {
+    key: 'budget_alerts_enabled',
+    title: 'Peringatan budget',
+    hint: 'Saat pengeluaran Rumah Tangga / Tagihan mencapai 80% dan 100% rencana bulan ini.',
+    on: 'Peringatan budget aktif',
+    off: 'Peringatan budget dimatikan',
+  },
+  {
+    key: 'summaries_enabled',
+    title: 'Ringkasan otomatis',
+    hint: 'Mingguan (Minggu 20.00 WIB) dan laporan bulan lalu (tanggal 1, 08.00 WIB).',
+    on: 'Ringkasan otomatis aktif',
+    off: 'Ringkasan otomatis dimatikan',
+  },
+]
+
 function NotifySettings({
   householdId,
   threshold,
-  reminders,
+  toggles,
   hasGroup,
 }: {
   householdId: string
   threshold: number
-  reminders: boolean
+  toggles: Record<ToggleKey, boolean>
   hasGroup: boolean
 }) {
   const { updateSettings } = useHouseholdMutations()
   const [value, setValue] = useState<number | null>(threshold)
   const dirty = (value ?? 0) !== threshold
+  const target = hasGroup ? 'grup keluarga' : 'chat pribadi tiap anggota yang terhubung'
 
   return (
     <section className="grid gap-3 border-t pt-4">
       <h3 className="flex items-center gap-1.5 text-sm font-medium">
         <BellIcon className="size-4" /> Notifikasi
+        <span className="font-normal text-muted-foreground">· dikirim ke {target}</span>
       </h3>
-      <label className="flex items-start gap-3 text-sm">
-        <Switch
-          checked={reminders}
-          disabled={updateSettings.isPending}
-          onCheckedChange={(checked) =>
-            updateSettings.mutate(
-              { id: householdId, reminders_enabled: checked },
-              { onSuccess: () => toast.success(checked ? 'Pengingat aktif' : 'Pengingat dimatikan') },
-            )
-          }
-        />
-        <span>
-          Pengingat jatuh tempo setiap hari jam 07.00 WIB
-          <span className="block text-xs text-muted-foreground">
-            Dikirim ke {hasGroup ? 'grup keluarga' : 'chat pribadi tiap anggota yang terhubung'}.
+      {TOGGLES.map((t) => (
+        <label key={t.key} className="flex items-start gap-3 text-sm">
+          <Switch
+            checked={toggles[t.key]}
+            disabled={updateSettings.isPending}
+            onCheckedChange={(checked) =>
+              updateSettings.mutate(
+                { id: householdId, [t.key]: checked },
+                { onSuccess: () => toast.success(checked ? t.on : t.off) },
+              )
+            }
+          />
+          <span>
+            {t.title}
+            <span className="block text-xs text-muted-foreground">{t.hint}</span>
           </span>
-        </span>
-      </label>
+        </label>
+      ))}
       <form
         className="flex flex-wrap items-end gap-2"
         onSubmit={(e) => {
@@ -245,7 +284,7 @@ function NotifySettings({
           Simpan
         </Button>
       </form>
-      {!hasGroup && <Badge variant="outline" className="justify-self-start">Butuh grup terhubung</Badge>}
+      {!hasGroup && <Badge variant="outline" className="justify-self-start">Pengeluaran besar butuh grup terhubung</Badge>}
     </section>
   )
 }

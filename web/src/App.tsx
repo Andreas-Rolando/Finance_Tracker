@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 import { LoginPage, SetupRequiredPage } from '@/pages/AuthPages'
 import { AuthProvider, useAuth } from '@/providers/auth'
 import { MonthProvider } from '@/providers/month'
+import { RealtimeSync } from '@/providers/realtime'
 import { TransactionDialogProvider } from '@/providers/transaction-dialog'
 
 const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) =>
@@ -32,6 +33,7 @@ function Gate() {
   if (!session) return <LoginPage />
   return (
     <MonthProvider>
+      <RealtimeSync userId={session.user.id} />
       <TransactionDialogProvider>
         <BrowserRouter>
           <Routes>

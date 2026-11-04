@@ -10,6 +10,7 @@ Finance_Tracking/
 ├── docs/                  ← plan & panduan setup Telegram bot
 ├── supabase/migrations/   ← skema database + RLS + views
 ├── supabase/functions/    ← Edge Functions (Telegram webhook & cron)
+├── .github/workflows/     ← CI: lint, build, semua test di setiap push
 └── web/                   ← frontend React
 ```
 
@@ -23,6 +24,7 @@ Finance_Tracking/
    3. `20261103020000_sso_allowlist.sql`: hanya email yang diundang yang bisa masuk
    4. `20261103030000_security_hardening.sql`: akun hanya lewat Google, pencatat tidak bisa dipalsukan, akses anon ditutup
    5. `20261104000000_telegram.sql` & 6. `20261104010000_telegram_cron.sql`: Telegram bot (lihat [docs/telegram-setup.md](docs/telegram-setup.md))
+   7. `20261105000000_alerts_dedupe.sql` & 8. `20261105010000_summaries_realtime.sql`: peringatan budget, ringkasan otomatis, anti-dobel bot, realtime
 
    Kalau pakai Supabase CLI: `supabase link` lalu `supabase db push`.
 3. **Login Google (SSO):**
@@ -60,7 +62,7 @@ Nilai `URL` dan `anon key` ada di Supabase Dashboard → Project Settings → AP
 | Perintah | Fungsi |
 |---|---|
 | `npm run build` | Type-check + build produksi ke `web/dist` |
-| `npm test` | Unit test rumus keuangan (paritas dengan Excel, hutang, tabungan, kalender) |
+| `npm test` | Unit test rumus, parser bot, dan **test keamanan database** (semua migrasi di PGlite: RLS, undangan, SSO, peringatan budget) |
 | `npm run lint` | Lint dengan oxlint |
 | `npx deno test --allow-env --allow-read --config supabase/functions/deno.json supabase/functions/` | Test integrasi bot Telegram (dari root repo) |
 

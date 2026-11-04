@@ -14,7 +14,8 @@ const state: {
   deleted: string[]
   sent: Row[]
   pending: Row[]
-} = { linked: true, inserted: [], deleted: [], sent: [], pending: [] }
+  updates: { update_id: number; telegram_user_id: number | null; received_at: string }[]
+} = { linked: true, inserted: [], deleted: [], sent: [], pending: [], updates: [] }
 
 const TODAY = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10)
 const items = [
@@ -54,8 +55,19 @@ globalThis.fetch = (async (input: any, init?: RequestInit) => {
       case 'savings_goals': return reply([])
       case 'v_debt_paid': return reply([{ paid: 3000000 }])
       case 'transactions': return reply([])
+      case 'telegram_updates': {
+        const uid = Number((url.searchParams.get('telegram_user_id') ?? '').replace('eq.', ''))
+        return reply(state.updates.filter((u) => u.telegram_user_id === uid))
+      }
       default: return reply([])
     }
+  }
+  if (method === 'POST' && table === 'telegram_updates') {
+    if (state.updates.some((u) => u.update_id === body.update_id)) {
+      return json({ code: '23505', message: 'duplicate key value violates unique constraint' }, 409)
+    }
+    state.updates.push({ ...body, received_at: new Date().toISOString() })
+    return json([body], 201)
   }
   if (method === 'POST') {
     const row = { id: `tx-${state.inserted.length + 1}`, created_at: new Date().toISOString(), ...body }
@@ -80,12 +92,13 @@ const post = (update: unknown, secret = 'hook-secret') =>
     body: JSON.stringify(update),
   }))
 
+let nextUpdate = 1
 const msg = (text: string, chat: Row = { id: 111, type: 'private' }) => ({
-  update_id: 1,
+  update_id: nextUpdate++,
   message: { message_id: 10, from: { id: 111, first_name: 'Nando' }, chat, text },
 })
 
-const reset = () => { state.inserted = []; state.sent = []; state.deleted = []; state.pending = []; state.linked = true }
+const reset = () => { state.inserted = []; state.sent = []; state.deleted = []; state.pending = []; state.linked = true; state.updates = [] }
 
 Deno.test('menolak request tanpa secret yang benar', async () => {
   reset()
@@ -172,4 +185,20 @@ Deno.test('/start dengan kode tidak valid', async () => {
   reset()
   await post(msg('/start ABC123'))
   assert(String(state.sent[0].text).includes('tidak valid'))
+})
+
+Deno.test('update yang dikirim ulang Telegram tidak dicatat dua kali', async () => {
+  reset()
+  const u = msg('bensin 50rb')
+  await post(u)
+  await post(u) // retry dengan update_id yang sama
+  assertEquals(state.inserted.length, 1)
+})
+
+Deno.test('batas pesan per menit: pesan ke-21 diberi peringatan, sisanya diabaikan', async () => {
+  reset()
+  for (let i = 0; i < 23; i++) await post(msg(`jajan ${i + 1}rb`))
+  assertEquals(state.inserted.length, 20)
+  const warnings = state.sent.filter((s) => String(s.text).includes('Terlalu banyak'))
+  assertEquals(warnings.length, 1)
 })

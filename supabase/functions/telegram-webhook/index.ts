@@ -20,6 +20,7 @@ import {
 } from '../_shared/core.ts'
 import {
   type Account,
+  claimUpdate,
   cleanup,
   db,
   debtRemaining,
@@ -33,6 +34,8 @@ import {
   loadMonthTx,
   type NewTx,
   profileName,
+  RATE_LIMIT_PER_MINUTE,
+  recentUpdateCount,
   renderTx,
 } from '../_shared/data.ts'
 import { parseMessage, type ParsedTx } from '../_shared/parser.ts'
@@ -72,6 +75,19 @@ Deno.serve(async (req) => {
     return new Response('bad request', { status: 400 })
   }
   try {
+    const fromId = update.message?.from?.id ?? update.callback_query?.from.id ?? null
+    // Telegram mengirim ulang update kalau respons lambat/gagal → proses sekali saja.
+    if (!(await claimUpdate(update.update_id, fromId))) return new Response('ok')
+    if (fromId) {
+      const n = await recentUpdateCount(fromId)
+      if (n > RATE_LIMIT_PER_MINUTE) {
+        if (n === RATE_LIMIT_PER_MINUTE + 1) {
+          if (update.message) await send(update.message.chat.id, '🐢 Terlalu banyak pesan dalam semenit. Tunggu sebentar ya.')
+          else if (update.callback_query) await answer(update.callback_query.id, 'Terlalu cepat, tunggu sebentar.', true)
+        }
+        return new Response('ok')
+      }
+    }
     if (update.message) await onMessage(update.message)
     else if (update.callback_query) await onCallback(update.callback_query)
     if (update.update_id % 50 === 0) await cleanup()
