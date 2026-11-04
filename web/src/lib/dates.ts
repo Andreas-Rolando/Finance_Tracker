@@ -22,6 +22,13 @@ export function isoDate(year: number, month: number, day: number): string {
   return `${year}-${pad(month)}-${pad(day)}`
 }
 
+/** Tambah n hari ke tanggal YYYY-MM-DD (tanpa efek zona waktu). */
+export function addDaysISO(date: string, n: number): string {
+  const d = new Date(`${date}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
 export function prevMonth({ year, month }: YM): YM {
   return month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 }
 }

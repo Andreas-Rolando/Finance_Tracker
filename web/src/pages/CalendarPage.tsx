@@ -11,7 +11,7 @@ import { formatIDR } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useMonth } from '@/providers/month'
 import { useTransactionDialog } from '@/providers/transaction-dialog'
-import { DueRow, prefillFromDue } from './DashboardPage'
+import { DueRow, prefillFromDue } from '@/components/app/due'
 
 export function CalendarPage() {
   const { ym } = useMonth()

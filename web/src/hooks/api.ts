@@ -70,6 +70,19 @@ export function useTransactions(ym: YM) {
   })
 }
 
+/** Transaksi pada rentang tanggal (inklusif), mis. untuk perbandingan mingguan lintas bulan. */
+export function useTransactionsRange(from: string, to: string) {
+  return useQuery({
+    queryKey: [...qk.transactionsAll, 'range', from, to],
+    queryFn: async () => {
+      const rows = unwrap(
+        await supabase.from('transactions').select('*').gte('date', from).lte('date', to).order('date', { ascending: false }),
+      )
+      return (rows as Transaction[]).map((r) => ({ ...r, amount: num(r.amount) }))
+    },
+  })
+}
+
 export function useDebts() {
   return useQuery({
     queryKey: qk.debts,

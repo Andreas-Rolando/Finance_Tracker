@@ -84,7 +84,7 @@ export function AppLayout() {
       </aside>
 
       <main className="px-4 pt-5 pb-28 sm:px-6 md:ml-60 md:px-8 md:pt-8 md:pb-12">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-6xl">
           <div className="mb-4 flex items-center gap-2 md:hidden">
             <img src="/logo.png" alt="" className="size-7" width={28} height={28} />
             <span className="text-sm font-semibold tracking-tight">Finance Tracker</span>

@@ -62,6 +62,10 @@
     --brand-emerald: #10B981;
     --brand-mint: #77F5C2;
     --brand-mint-soft: #C8FFE6;
+    /* Kartu utama dashboard (selalu gelap) */
+    --hero: #10252F;
+    --hero-track: #1a3a47;
+    --hero-muted: #a9c4c9;
 
     --background: #f5faf8;
     --foreground: #10252F;
@@ -114,6 +118,9 @@
     --brand-emerald: #10B981;
     --brand-mint: #77F5C2;
     --brand-mint-soft: #C8FFE6;
+    --hero: #15323f;
+    --hero-track: #224a5a;
+    --hero-muted: #a9c4c9;
 
     --background: #0b1a21;
     --foreground: #e6f4ef;
