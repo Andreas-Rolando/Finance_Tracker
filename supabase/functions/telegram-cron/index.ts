@@ -25,10 +25,12 @@ import {
 } from '../_shared/data.ts'
 import { send } from '../_shared/telegram.ts'
 
-const CRON_SECRET = Deno.env.get('TELEGRAM_CRON_SECRET')
+const CRON_SECRET = Deno.env.get('TELEGRAM_CRON_SECRET')?.trim()
 
 Deno.serve(async (req) => {
-  if (!CRON_SECRET || req.headers.get('x-cron-secret') !== CRON_SECRET) {
+  const got = req.headers.get('x-cron-secret')?.trim() ?? ''
+  if (!CRON_SECRET || got !== CRON_SECRET) {
+    console.error(CRON_SECRET ? `401: secret cron tidak cocok (diterima ${got.length}, di Supabase ${CRON_SECRET.length} karakter)` : '401: TELEGRAM_CRON_SECRET belum di-set')
     return new Response('unauthorized', { status: 401 })
   }
   const task = new URL(req.url).searchParams.get('task')

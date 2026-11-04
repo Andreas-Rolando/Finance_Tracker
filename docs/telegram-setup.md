@@ -58,7 +58,7 @@ Untuk **setiap** fungsi:
 2. **Nama fungsi** harus persis `telegram-webhook` (lalu `telegram-cron` untuk fungsi kedua).
 3. Hapus contoh kode di editor, lalu buka file bundled-nya di VS Code, **Ctrl+A → Ctrl+C**, dan tempel di editor dashboard.
 4. Klik **Deploy function**.
-5. Setelah ter-deploy, buka tab **Details/Settings** fungsi itu, **matikan "Enforce JWT verification"** (Verify JWT), lalu **Save**. Ini wajib, karena Telegram dan cron tidak mengirim JWT. Keamanannya ditangani secret header.
+5. Setelah ter-deploy, buka tab **Settings** fungsi itu, **matikan "Verify JWT with legacy secret"** (toggle jadi abu-abu), lalu **Save changes**. Ini wajib, karena Telegram dan cron tidak mengirim JWT. Keamanannya ditangani secret header.
 
 ## 6. Daftarkan webhook (browser)
 Susun URL ini, ganti bagian `<...>`, lalu buka di browser:
@@ -123,7 +123,7 @@ Kalau pemilihan grup tidak muncul, tambahkan bot ke grup secara manual (Add memb
 | Gejala | Cek |
 |---|---|
 | Bot tidak membalas | Buka `getWebhookInfo` dan lihat `last_error_message`. Cek juga Dashboard → Edge Functions → telegram-webhook → **Logs** |
-| `401` di log webhook | `secret_token` di URL setWebhook berbeda dengan `TELEGRAM_WEBHOOK_SECRET`, **atau** "Enforce JWT verification" masih aktif |
+| `401` di log webhook | `secret_token` di URL setWebhook berbeda dengan `TELEGRAM_WEBHOOK_SECRET`, **atau** "Verify JWT with legacy secret" masih aktif. Lihat Logs: pesan *"secret webhook tidak cocok (diterima X, di Supabase Y karakter)"* menunjukkan beda panjangnya |
 | Di grup bot hanya merespons perintah | Privacy mode masih aktif. Matikan, lalu keluarkan dan masukkan lagi bot ke grup |
 | Pengingat jam 7 tidak datang | Di SQL Editor, jalankan `select * from cron.job_run_details order by start_time desc limit 5;` dan cek secret Vault (langkah 7) |
 | Notifikasi pengeluaran besar tidak datang | Grup harus terhubung, ambang di Pengaturan > 0, dan transaksinya dicatat dari web atau chat pribadi |

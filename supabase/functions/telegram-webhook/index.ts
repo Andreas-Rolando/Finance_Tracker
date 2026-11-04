@@ -49,13 +49,20 @@ import {
   type TgUpdate,
 } from '../_shared/telegram.ts'
 
-const SECRET = Deno.env.get('TELEGRAM_WEBHOOK_SECRET')
+const SECRET = Deno.env.get('TELEGRAM_WEBHOOK_SECRET')?.trim()
 const BOT_USERNAME = (Deno.env.get('TELEGRAM_BOT_USERNAME') ?? '').replace(/^@/, '').toLowerCase()
 const UNDO_HOURS = 24
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('ok')
-  if (!SECRET || req.headers.get('x-telegram-bot-api-secret-token') !== SECRET) {
+  if (!SECRET) {
+    console.error('401: secret TELEGRAM_WEBHOOK_SECRET belum di-set di Edge Functions → Secrets (lalu deploy ulang fungsi)')
+    return new Response('unauthorized', { status: 401 })
+  }
+  const got = req.headers.get('x-telegram-bot-api-secret-token')?.trim() ?? ''
+  if (got !== SECRET) {
+    // Jangan pernah log isi secret — cukup panjangnya untuk diagnosis.
+    console.error(`401: secret webhook tidak cocok (diterima ${got.length} karakter, di Supabase ${SECRET.length} karakter)`)
     return new Response('unauthorized', { status: 401 })
   }
   let update: TgUpdate
